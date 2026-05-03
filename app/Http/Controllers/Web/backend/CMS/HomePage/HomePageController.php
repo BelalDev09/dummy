@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend\CMS\HomePage;
+namespace App\Http\Controllers\Web\Backend\CMS\HomePage;
 
 use App\Enums\Page;
 use App\Enums\Section;

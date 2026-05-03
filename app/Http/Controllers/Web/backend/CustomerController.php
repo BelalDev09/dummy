@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend;
+namespace App\Http\Controllers\Web\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CustomerCreateRequest;

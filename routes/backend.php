@@ -1,21 +1,21 @@
 <?php
 
-use App\Http\Controllers\Web\backend\admin\DynamicCMSController;
-use App\Http\Controllers\Web\backend\admin\FAQController;
-use App\Http\Controllers\Web\backend\admin\OrderController;
-use App\Http\Controllers\Web\backend\admin\SocialSettingController;
-use App\Http\Controllers\Web\backend\admin\SubscriberController;
-use App\Http\Controllers\Web\backend\BrandController;
-use App\Http\Controllers\Web\backend\CategoryController;
-use App\Http\Controllers\Web\backend\DashboardController;
-use App\Http\Controllers\Web\backend\PermissionController;
-use App\Http\Controllers\Web\backend\ProductController;
-use App\Http\Controllers\Web\backend\RoleController;
-use App\Http\Controllers\Web\backend\SettingController;
-use App\Http\Controllers\Web\backend\settings\DynamicPagesController;
-use App\Http\Controllers\Web\backend\settings\ProfileSettingController;
-use App\Http\Controllers\Web\backend\SubCategoryController;
-use App\Http\Controllers\Web\backend\UserController;
+use App\Http\Controllers\Web\Backend\Admin\CMSController;
+use App\Http\Controllers\Web\Backend\Admin\FAQController;
+use App\Http\Controllers\Web\Backend\Admin\NewslettersController;
+use App\Http\Controllers\Web\Backend\Admin\OrderController;
+use App\Http\Controllers\Web\Backend\Admin\SocialSettingController;
+use App\Http\Controllers\Web\Backend\BrandController;
+use App\Http\Controllers\Web\Backend\CategoryController;
+use App\Http\Controllers\Web\Backend\DashboardController;
+use App\Http\Controllers\Web\Backend\PermissionController;
+use App\Http\Controllers\Web\Backend\ProductController;
+use App\Http\Controllers\Web\Backend\RoleController;
+use App\Http\Controllers\Web\Backend\SettingController;
+use App\Http\Controllers\Web\Backend\Settings\DynamicPagesController;
+use App\Http\Controllers\Web\Backend\Settings\ProfileSettingController;
+use App\Http\Controllers\Web\Backend\SubCategoryController;
+use App\Http\Controllers\Web\Backend\UserController;
 use Illuminate\Support\Facades\Route;
 
 // ── Public
@@ -55,17 +55,15 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|superadmin'])->
 
     // FAQ
     Route::controller(FAQController::class)->prefix('faq')->name('faq.')->group(function () {
-        Route::get('/', [FAQController::class, 'index'])->name('index');
-        Route::get('/list', [FAQController::class, 'list'])->name('list');
-
-        Route::get('/create', [FAQController::class, 'create'])->name('create');
-        Route::post('/store', [FAQController::class, 'store'])->name('store');
-        Route::get('show/{id}', [FAQController::class, 'show'])->name('show');
-        Route::get('/edit/{id}', [FAQController::class, 'edit'])->name('edit');
-        Route::post('/update/{id}', [FAQController::class, 'update'])->name('update');
-
-        Route::delete('/delete/{id}', [FAQController::class, 'destroy'])->name('destroy');
-        Route::post('/status', [FAQController::class, 'status'])->name('status');
+        Route::get('/', 'index')->name('index');
+        Route::get('/list', 'list')->name('list');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::get('show/{id}', 'show')->name('show');
+        Route::get('/edit/{id}', 'edit')->name('edit');
+        Route::post('/update/{id}', 'update')->name('update');
+        Route::delete('/delete/{id}', 'destroy')->name('destroy');
+        Route::post('/status', 'status')->name('status');
     });
     // Users
     Route::controller(UserController::class)->prefix('users')->name('user.')->group(function () {
@@ -82,15 +80,15 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|superadmin'])->
 
 
     // Categories
-    Route::prefix('categories')->name('categories.')->group(function () {
-        Route::get('/', [CategoryController::class, 'index'])->name('index');
-        Route::get('/create', [CategoryController::class, 'create'])->name('create');
-        Route::post('/store', [CategoryController::class, 'store'])->name('store');
-        Route::get('/edit/{id}', [CategoryController::class, 'edit'])->name('edit');
-        Route::put('/update/{id}', [CategoryController::class, 'update'])->name('update');
-        Route::delete('/delete/{id}', [CategoryController::class, 'destroy'])->name('destroy');
-        Route::post('/status/{id}', [CategoryController::class, 'changeStatus'])->name('status');
-        Route::post('/bulk-delete', [CategoryController::class, 'bulkDelete'])->name('bulk-delete');
+    Route::prefix('categories')->name('categories.')->controller(CategoryController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::get('/edit/{id}', 'edit')->name('edit');
+        Route::put('/update/{id}', 'update')->name('update');
+        Route::delete('/delete/{id}', 'destroy')->name('destroy');
+        Route::post('/status/{id}', 'changeStatus')->name('status');
+        Route::post('/bulk-delete', 'bulkDelete')->name('bulk-delete');
     });
     // sub categories routes
 
@@ -127,7 +125,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|superadmin'])->
     // dynamic cms page create
     Route::prefix('cms')
         ->name('dynamic.cms.')
-        ->controller(DynamicCMSController::class)
+        ->controller(CMSController::class)
         ->group(function () {
 
             Route::get('/', 'index')->name('index');
@@ -138,7 +136,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|superadmin'])->
             Route::get('/edit/{id}', 'edit')->name('edit');
             Route::put('/update/{id}', 'update')->name('update');
 
-            Route::post('/delete', 'destroy')->name('destroy');
+            Route::delete('/{id}', 'destroy')->name('destroy');
             Route::post('/status/{id}', 'changeStatus')
                 ->name('status');
         });
@@ -184,9 +182,10 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|superadmin'])->
     });
 
     // newsletters
-    Route::get('/newsletters', [SubscriberController::class, 'index'])->name('newsletters.index');
-
-    Route::get('/newsletters/data', [SubscriberController::class, 'getData'])->name('newsletters.data');
+    Route::controller(NewslettersController::class)->prefix('newsletters')->name('newsletters.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/data', 'getData')->name('data');
+    });
     // Dynamic Pages for terms and condition
     Route::prefix('dynamicpages')->name('dynamicpages.')->controller(DynamicPagesController::class)->group(function () {
         Route::get('/', 'index')->name('index');

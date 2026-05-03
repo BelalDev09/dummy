@@ -1,19 +1,13 @@
 <?php
 
-use App\Http\Controllers\Web\backend\admin\CartManageController;
-use App\Http\Controllers\Web\backend\CMS\HomePage\HomePageController;
-use App\Http\Controllers\Web\backend\DashboardController;
+use App\Http\Controllers\Web\Backend\Admin\CartManagementController;
+use App\Http\Controllers\Web\Backend\CMS\HomePage\HomePageController;
+use App\Http\Controllers\Web\Backend\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-
-/**
- *
- * Public
- */
-
 Route::get('/', fn() => view('welcome'));
-Route::middleware(['auth'])->get('/dashboard', function () {
 
+Route::middleware(['auth'])->get('/dashboard', function () {
     if (auth()->user()->hasAnyRole(['admin', 'superadmin'])) {
         return redirect()->route('admin.dashboard');
     }
@@ -21,15 +15,20 @@ Route::middleware(['auth'])->get('/dashboard', function () {
     return abort(403, 'Only admin can access dashboard');
 });
 
+/**
+ *
+ * Public
+ */
+
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 
-    Route::get('/carts',                     [CartManageController::class, 'index'])->name('carts.index');
-    Route::get('/carts/export',              [CartManageController::class, 'export'])->name('carts.export');
-    Route::get('/carts/{cart}',              [CartManageController::class, 'show'])->name('carts.show');
-    Route::patch('/carts/{cart}/status',     [CartManageController::class, 'updateStatus'])->name('carts.updateStatus');
-    Route::delete('/carts/{cart}',           [CartManageController::class, 'destroy'])->name('carts.destroy');
+    Route::get('/carts',                     [CartManagementController::class, 'index'])->name('carts.index');
+    Route::get('/carts/export',              [CartManagementController::class, 'export'])->name('carts.export');
+    Route::get('/carts/{cart}',              [CartManagementController::class, 'show'])->name('carts.show');
+    Route::patch('/carts/{cart}/status',     [CartManagementController::class, 'updateStatus'])->name('carts.updateStatus');
+    Route::delete('/carts/{cart}',           [CartManagementController::class, 'destroy'])->name('carts.destroy');
 
     /**
      *
@@ -72,5 +71,4 @@ Route::prefix('admin')->name('admin.')->group(function () {
         });
     });
 });
-
 require __DIR__ . '/auth.php';

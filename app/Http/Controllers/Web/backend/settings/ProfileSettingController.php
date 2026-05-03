@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend\settings;
+namespace App\Http\Controllers\Web\Backend\Settings;
 
-use Exception;
 use App\Services\Service;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -10,7 +9,9 @@ use App\Models\User;
 use App\Traits\AuthorizesRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class ProfileSettingController extends Controller
 {
@@ -46,23 +47,30 @@ class ProfileSettingController extends Controller
 
 
         if ($validator->fails()) {
-            return redirect()->back()->with([
-                'error' => $validator->errors()->first(),
-                'type'  => 'profile'
-            ]);
+            return back()
+                ->withInput()
+                ->with([
+                    'error' => $validator->errors()->first(),
+                    'type'  => 'profile'
+                ]);
         }
 
         try {
-            $data = $request->all();
+            User::findOrFail(Auth::id())->update([
+                'name' => $request->name,
+                'email' => $request->email,
+            ]);
 
-            User::find(Auth::id())->update($data);
+            return back()->with('success', 'Profile updated successfully.');
+        } catch (Throwable $e) {
+            Log::error('Profile update failed', [
+                'user_id' => Auth::id(),
+                'message' => $e->getMessage(),
+            ]);
 
-            flash()->success('Profile updated successfully.');
-
-            return redirect()->back();
-        } catch (Exception $e) {
-            flash()->error($e->getMessage());
-            return redirect()->back();
+            return back()
+                ->withInput()
+                ->with('error', 'Profile was not updated. Reason: ' . $e->getMessage());
         }
     }
 
@@ -81,7 +89,7 @@ class ProfileSettingController extends Controller
 
 
         if ($validator->fails()) {
-            return redirect()->back()->with([
+            return back()->with([
                 'error' => $validator->errors()->first(),
                 'type'  => 'password'
             ]);
@@ -92,24 +100,33 @@ class ProfileSettingController extends Controller
         try {
 
             if (! Hash::check($request->old_password, Auth::user()->password)) {
-                throw new Exception('Old password does not match.');
+                return back()->with([
+                    'error' => 'Current password does not match.',
+                    'type' => 'password',
+                ]);
             }
 
-            $user = User::find(Auth::id());
+            $user = User::findOrFail(Auth::id());
             $user->password = Hash::make($request->password);
             $user->save();
 
-            flash()->success('Password updated successfully.');
-            return redirect()->route('profile');
-        } catch (Exception $e) {
-            flash()->error($e->getMessage());
-            return redirect()->back();
+            return redirect()->route('admin.profile')->with('success', 'Password updated successfully.');
+        } catch (Throwable $e) {
+            Log::error('Password update failed', [
+                'user_id' => Auth::id(),
+                'message' => $e->getMessage(),
+            ]);
+
+            return back()->with([
+                'error' => 'Password was not updated. Reason: ' . $e->getMessage(),
+                'type' => 'password',
+            ]);
         }
     }
 
     public function updateProfilePicture(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ], [
             'avatar.required' => 'Please select an image.',
@@ -118,9 +135,16 @@ class ProfileSettingController extends Controller
             'avatar.max' => 'Image size must not exceed 2MB.',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
         try {
 
-            $user = User::find(Auth::id());
+            $user = User::findOrFail(Auth::id());
 
             if ($request->hasFile('avatar')) {
 
@@ -145,12 +169,17 @@ class ProfileSettingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'No file uploaded'
+            ], 422);
+        } catch (Throwable $e) {
+            Log::error('Profile picture update failed', [
+                'user_id' => Auth::id(),
+                'message' => $e->getMessage(),
             ]);
-        } catch (\Exception $e) {
+
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ]);
+                'message' => 'Profile picture was not updated. Reason: ' . $e->getMessage()
+            ], 500);
         }
     }
 

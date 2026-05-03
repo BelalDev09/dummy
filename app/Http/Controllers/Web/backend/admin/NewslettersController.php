@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend\admin;
+namespace App\Http\Controllers\Web\Backend\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Newsletter;
 use Yajra\DataTables\Facades\DataTables;
 
-class SubscriberController extends Controller
+class NewslettersController extends Controller
 {
 
     public function index()

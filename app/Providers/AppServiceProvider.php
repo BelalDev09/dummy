@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\SystemSetting;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -37,7 +38,12 @@ class AppServiceProvider extends ServiceProvider
         });
         // dynamic databse connection
 
-        View::share('setting', SystemSetting::firstOrNew([]));
+        try {
+            View::share('setting', SystemSetting::firstOrNew([]));
+        } catch (QueryException $e) {
+            // Allow artisan migrate on fresh environments where DB/table is not ready yet.
+            View::share('setting', new SystemSetting());
+        }
 
         // qr code data route
         \Illuminate\Http\Request::setTrustedProxies(

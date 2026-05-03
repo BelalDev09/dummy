@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend\admin;
+namespace App\Http\Controllers\Web\Backend\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
@@ -8,7 +8,7 @@ use App\Models\CartItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class CartManageController extends Controller
+class CartManagementController extends Controller
 {
     public function index(Request $request)
     {

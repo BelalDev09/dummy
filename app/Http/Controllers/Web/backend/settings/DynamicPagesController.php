@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend\settings;
+namespace App\Http\Controllers\Web\Backend\Settings;
 
 use App\Helper\Helper;
 use App\Models\DynamicPage;

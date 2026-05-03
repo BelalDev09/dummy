@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend\admin;
+namespace App\Http\Controllers\Web\Backend\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FAQ;
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
-class FAQController extends Controller
+class FAQController  extends Controller
 {
     /* ---------------------------------
         INDEX

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API\cms;
+namespace App\Http\Controllers\API\Cms;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\API\V1\CMS\Home\CategorySectionResource;

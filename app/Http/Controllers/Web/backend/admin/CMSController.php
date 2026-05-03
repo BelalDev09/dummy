@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend\admin;
+namespace App\Http\Controllers\Web\Backend\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CMS;
@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
-class DynamicCMSController extends Controller
+class CMSController extends Controller
 {
     /* ================= INDEX ================= */
     public function index(Request $request)
@@ -87,7 +87,6 @@ class DynamicCMSController extends Controller
         return view('backend.layout.cms.dynamic.index');
     }
 
-    // STORE
     // STORE
     public function store(Request $request)
     {

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend;
+namespace App\Http\Controllers\Web\Backend;
 
 use App\Helper\Helper;
 use App\Http\Controllers\Controller;

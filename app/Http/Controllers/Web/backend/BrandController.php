@@ -1,13 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend;
+namespace App\Http\Controllers\Web\Backend;
 
 use App\Helper\Helper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BrandRequest;
 use App\Models\Brand;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Throwable;
 use Yajra\DataTables\Facades\DataTables;
 
 class BrandController extends Controller
@@ -101,44 +104,61 @@ class BrandController extends Controller
         $imagePath = null;
         $bannerPath = null;
 
+        try {
+            if ($request->hasFile('logo')) {
+                $logoPath = Helper::fileUpload(
+                    $request->file('logo'),
+                    'brands',
+                    Str::slug($request->name) . '_logo'
+                );
+            }
 
+            if ($request->hasFile('image')) {
+                $imagePath = Helper::fileUpload(
+                    $request->file('image'),
+                    'brands',
+                    Str::slug($request->name) . '_image'
+                );
+            }
 
-        if ($request->hasFile('logo')) {
-            $logoPath = Helper::fileUpload(
-                $request->file('logo'),
-                'brands',
-                Str::slug($request->name) . '_logo'
-            );
-        }
-        if ($request->hasFile('image')) {
-            $imagePath = Helper::fileUpload(
-                $request->file('image'),
-                'brands',
-                Str::slug($request->name) . '_image'
-            );
-        }
+            if ($request->hasFile('banner')) {
+                $bannerPath = Helper::fileUpload(
+                    $request->file('banner'),
+                    'brands',
+                    Str::slug($request->name) . '_banner'
+                );
+            }
 
-        if ($request->hasFile('banner')) {
-            $bannerPath = Helper::fileUpload(
-                $request->file('banner'),
-                'brands',
-                Str::slug($request->name) . '_banner'
-            );
+            DB::transaction(function () use ($request, $logoPath, $imagePath, $bannerPath) {
+                Brand::create([
+                    'name' => $request->name,
+                    'slug' => Str::slug($request->name),
+                    'logo' => $logoPath,
+                    'image' => $imagePath,
+                    'banner' => $bannerPath,
+                    'description' => $request->description,
+                    'country' => $request->country,
+                    'website' => $request->website,
+                    'status' => true,
+                ]);
+            });
+        } catch (Throwable $e) {
+            foreach (array_filter([$logoPath, $imagePath, $bannerPath]) as $path) {
+                Helper::deleteFile($path);
+            }
+
+            Log::error('Brand create failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Brand was not created. Reason: ' . $e->getMessage());
         }
-        Brand::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'logo' => $logoPath,
-            'image' => $imagePath,
-            'banner' => $bannerPath,
-            'description' => $request->description,
-            'country' => $request->country,
-            'website' => $request->website,
-            'status' => true,
-        ]);
 
         return redirect()->route('admin.brands.index')
-            ->with('success', 'Brand created');
+            ->with('success', 'Brand created successfully');
     }
 
     public function edit($id)
@@ -154,47 +174,100 @@ class BrandController extends Controller
         $logo = $brand->logo;
         $image = $brand->image;
         $banner = $brand->banner;
+        $oldLogo = $brand->logo;
+        $oldImage = $brand->image;
+        $oldBanner = $brand->banner;
+        $newUploads = [];
 
-        if ($request->file('logo') && $request->file('logo')->isValid()) {
-            $logo = Helper::fileUpload($request->file('logo'), 'brands', Str::slug($request->name) . '_logo');
-            if ($brand->logo) {
-                Helper::deleteFile($brand->logo);
+        try {
+            if ($request->file('logo') && $request->file('logo')->isValid()) {
+                $logo = Helper::fileUpload($request->file('logo'), 'brands', Str::slug($request->name) . '_logo');
+                $newUploads[] = $logo;
             }
-        }
 
-        if ($request->file('image') && $request->file('image')->isValid()) {
-            $image = Helper::fileUpload($request->file('image'), 'brands', Str::slug($request->name) . '_image');
-            if ($brand->image) {
-                Helper::deleteFile($brand->image);
+            if ($request->file('image') && $request->file('image')->isValid()) {
+                $image = Helper::fileUpload($request->file('image'), 'brands', Str::slug($request->name) . '_image');
+                $newUploads[] = $image;
             }
-        }
 
-        if ($request->file('banner') && $request->file('banner')->isValid()) {
-            $banner = Helper::fileUpload($request->file('banner'), 'brands', Str::slug($request->name) . '_banner');
-            if ($brand->banner) {
-                Helper::deleteFile($brand->banner);
+            if ($request->file('banner') && $request->file('banner')->isValid()) {
+                $banner = Helper::fileUpload($request->file('banner'), 'brands', Str::slug($request->name) . '_banner');
+                $newUploads[] = $banner;
             }
-        }
 
-        $brand->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'logo' => $logo,
-            'image' => $image,
-            'banner' => $banner,
-            'description' => $request->description,
-            'country' => $request->country,
-            'website' => $request->website,
-        ]);
+            DB::transaction(function () use ($request, $brand, $logo, $image, $banner) {
+                $brand->update([
+                    'name' => $request->name,
+                    'slug' => Str::slug($request->name),
+                    'logo' => $logo,
+                    'image' => $image,
+                    'banner' => $banner,
+                    'description' => $request->description,
+                    'country' => $request->country,
+                    'website' => $request->website,
+                ]);
+            });
+
+            if ($logo !== $oldLogo && $oldLogo) {
+                Helper::deleteFile($oldLogo);
+            }
+
+            if ($image !== $oldImage && $oldImage) {
+                Helper::deleteFile($oldImage);
+            }
+
+            if ($banner !== $oldBanner && $oldBanner) {
+                Helper::deleteFile($oldBanner);
+            }
+        } catch (Throwable $e) {
+            foreach (array_filter($newUploads) as $path) {
+                Helper::deleteFile($path);
+            }
+
+            Log::error('Brand update failed', [
+                'brand_id' => $brand->id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Brand was not updated. Reason: ' . $e->getMessage());
+        }
 
         return redirect()->route('admin.brands.index')
-            ->with('success', 'Brand updated');
+            ->with('success', 'Brand updated successfully');
     }
 
     public function destroy($id)
     {
-        $brand = Brand::findOrFail($id);
-        $brand->delete();
+        try {
+            $brand = Brand::findOrFail($id);
+
+            if ($brand->logo) {
+                Helper::deleteFile($brand->logo);
+            }
+
+            if ($brand->image) {
+                Helper::deleteFile($brand->image);
+            }
+
+            if ($brand->banner) {
+                Helper::deleteFile($brand->banner);
+            }
+
+            $brand->delete();
+        } catch (Throwable $e) {
+            Log::error('Brand delete failed', [
+                'brand_id' => $id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Brand was not deleted. Reason: ' . $e->getMessage(),
+            ], 500);
+        }
 
         return response()->json([
             'success' => true,
@@ -204,9 +277,21 @@ class BrandController extends Controller
 
     public function changeStatus($id)
     {
-        $brand = Brand::findOrFail($id);
-        $brand->status = !$brand->status;
-        $brand->save();
+        try {
+            $brand = Brand::findOrFail($id);
+            $brand->status = !$brand->status;
+            $brand->save();
+        } catch (Throwable $e) {
+            Log::error('Brand status update failed', [
+                'brand_id' => $id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Status was not updated. Reason: ' . $e->getMessage(),
+            ], 500);
+        }
 
         return response()->json([
             'success' => true,
@@ -224,23 +309,35 @@ class BrandController extends Controller
             ]);
         }
 
-        $brands = Brand::whereIn('id', $ids)->get();
+        try {
+            $brands = Brand::whereIn('id', $ids)->get();
 
-        foreach ($brands as $brand) {
+            foreach ($brands as $brand) {
 
-            if ($brand->logo) {
-                Helper::deleteFile($brand->logo);
+                if ($brand->logo) {
+                    Helper::deleteFile($brand->logo);
+                }
+
+                if ($brand->image) {
+                    Helper::deleteFile($brand->image);
+                }
+
+                if ($brand->banner) {
+                    Helper::deleteFile($brand->banner);
+                }
+
+                $brand->delete();
             }
+        } catch (Throwable $e) {
+            Log::error('Brand bulk delete failed', [
+                'ids' => $ids,
+                'message' => $e->getMessage(),
+            ]);
 
-            if ($brand->image) {
-                Helper::deleteFile($brand->image);
-            }
-
-            if ($brand->banner) {
-                Helper::deleteFile($brand->banner);
-            }
-
-            $brand->delete();
+            return response()->json([
+                'success' => false,
+                'message' => 'Selected brands were not deleted. Reason: ' . $e->getMessage(),
+            ], 500);
         }
 
         return response()->json([

@@ -28,7 +28,14 @@
            DROPIFY
         =============================== */
         if ($.fn.dropify) {
-            const dr = $('.dropify').dropify();
+            const dr = $('.dropify').dropify({
+                messages: {
+                    default: 'Drag and drop or click',
+                    replace: 'Drag and drop or click to replace',
+                    remove: 'Remove',
+                    error: 'Ooops, something wrong happened.'
+                }
+            });
 
             dr.on('dropify.afterClear', function(e, el) {
                 let flag = $(el.element).closest('.form-field-wrapper').find('[data-remove-flag]');
@@ -190,32 +197,69 @@
         buttonsStyling: false
     });
 
+    const toastConfig = {
+        success: {
+            background: '#ecfdf5',
+            color: '#065f46',
+            border: '#10b981',
+            iconColor: '#10b981'
+        },
+        error: {
+            background: '#fef2f2',
+            color: '#991b1b',
+            border: '#ef4444',
+            iconColor: '#ef4444'
+        },
+        warning: {
+            background: '#fffbeb',
+            color: '#92400e',
+            border: '#f59e0b',
+            iconColor: '#f59e0b'
+        },
+        info: {
+            background: '#eff6ff',
+            color: '#1e3a8a',
+            border: '#3b82f6',
+            iconColor: '#3b82f6'
+        }
+    };
+
     const Toast = Swal.mixin({
         toast: true,
-        position: "top-end",
+        position: 'top-end',
         showConfirmButton: false,
         timer: 3000,
-        timerProgressBar: true
+        timerProgressBar: true,
+        showClass: {
+            popup: 'swal2-show-custom'
+        },
+        hideClass: {
+            popup: 'swal2-hide-custom'
+        },
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
     });
 
     window.showToast = function(type, message) {
 
-        const colors = {
-            success: '#10b981',
-            error: '#ef4444',
-            warning: '#f59e0b',
-            info: '#3b82f6'
-        };
+        const config = toastConfig[type] || toastConfig.info;
 
         Toast.fire({
             icon: type,
             title: message,
-            background: '#fff',
-            color: '#111',
+            background: config.background,
+            color: config.color,
             didOpen: (toast) => {
-                toast.style.borderLeft = `5px solid ${colors[type] || '#3b82f6'}`;
+                toast.style.borderLeft = `6px solid ${config.border}`;
                 toast.style.borderRadius = '10px';
                 toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.08)';
+
+                const icon = toast.querySelector('.swal2-icon');
+                if (icon) {
+                    icon.style.color = config.iconColor;
+                }
             }
         });
     };
@@ -239,6 +283,14 @@
 
     @if (session('info'))
         showToast('info', @json(session('info')));
+    @endif
+
+    @if (session('message'))
+        showToast('info', @json(session('message')));
+    @endif
+
+    @if ($errors->any())
+        showToast('error', @json($errors->first()));
     @endif
 </script>
 

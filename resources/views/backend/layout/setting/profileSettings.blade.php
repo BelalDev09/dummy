@@ -1,62 +1,30 @@
 @extends('backend.app')
 
 @section('title', 'My Profile')
-@push('styles')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
-
-    <style>
-        .swal2-show-custom {
-            animation: slideInRight 0.35s ease-out;
-        }
-
-        .swal2-hide-custom {
-            animation: fadeOut 0.2s ease-in;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-
-            to {
-                opacity: 0;
-            }
-        }
-    </style>
-@endpush
 @section('content')
-    <div class="container-fluid">
+@php
+$activeTab = session('type') === 'password' ? 'password' : 'profile';
+@endphp
 
-        <!-- Header Card -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <div class="d-flex align-items-center flex-column flex-md-row">
+<div class="container-fluid">
 
-                    <div class="me-md-4 mb-3 mb-md-0 profile-img-main">
-                        <img src="{{ asset(Auth::user()->avatar) }}" class="rounded-circle border"
-                            style="width: 90px; height: 90px; object-fit: cover;">
-                    </div>
+    <!-- Header Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center flex-column flex-md-row">
 
-                    <button class="btn btn-soft-primary btn-sm" id="uploadImageBtn">
-                        <i class="ri-edit-2-line"></i> Update Profile Picture
-                    </button>
-
-                    <input type="file" id="profile_picture_input" name="avatar" hidden>
+                <div class="me-md-4 mb-3 mb-md-0 profile-img-main">
+                    <img src="{{ asset(Auth::user()->avatar) }}" class="rounded-circle border"
+                        style="width: 90px; height: 90px; object-fit: cover;">
                 </div>
 
+                <button class="btn btn-soft-primary btn-sm" id="uploadImageBtn">
+                    <i class="ri-edit-2-line"></i> Update Profile Picture
+                </button>
+
+                <input type="file" id="profile_picture_input" name="avatar" hidden>
             </div>
+
         </div>
     </div>
 
@@ -67,13 +35,15 @@
             <ul class="nav nav-tabs nav-tabs-custom nav-justified">
 
                 <li class="nav-item">
-                    <a class="nav-link active" data-bs-toggle="tab" href="#editProfile">
+                    <a class="nav-link {{ $activeTab === 'profile' ? 'active' : '' }}" data-bs-toggle="tab"
+                        href="#editProfile">
                         Edit Profile
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#updatePassword">
+                    <a class="nav-link {{ $activeTab === 'password' ? 'active' : '' }}" data-bs-toggle="tab"
+                        href="#updatePassword">
                         Change Password
                     </a>
                 </li>
@@ -86,19 +56,21 @@
             <div class="tab-content">
 
                 <!-- PROFILE UPDATE -->
-                <div class="tab-pane fade show active" id="editProfile">
+                <div class="tab-pane fade {{ $activeTab === 'profile' ? 'show active' : '' }}" id="editProfile">
 
                     <form method="POST" action="{{ route('admin.profile.update') }}">
                         @csrf
 
                         <div class="mb-3">
                             <label class="form-label">Name</label>
-                            <input type="text" name="name" class="form-control" value="{{ Auth::user()->name }}">
+                            <input type="text" name="name" class="form-control"
+                                value="{{ old('name', Auth::user()->name) }}">
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" value="{{ Auth::user()->email }}">
+                            <input type="email" name="email" class="form-control"
+                                value="{{ old('email', Auth::user()->email) }}">
                         </div>
 
                         <button class="btn btn-primary">
@@ -110,7 +82,7 @@
                 </div>
 
                 <!-- PASSWORD UPDATE -->
-                <div class="tab-pane fade" id="updatePassword">
+                <div class="tab-pane fade {{ $activeTab === 'password' ? 'show active' : '' }}" id="updatePassword">
 
                     <form method="POST" action="{{ route('admin.profile.update.password') }}">
                         @csrf
@@ -147,63 +119,80 @@
         </div>
     </div>
 
-    </div>
+</div>
 @endsection
 
 @push('scripts')
-    <script>
-        $(function() {
+<script>
+    $(function() {
+        function getErrorMessage(xhr, fallback) {
+            return xhr?.responseJSON?.message ||
+                xhr?.responseJSON?.errors?.avatar?.[0] ||
+                fallback;
+        }
 
-            $('#uploadImageBtn').on('click', function() {
-                $('#profile_picture_input').trigger('click');
-            });
+        function setUploadButtonLoading(isLoading) {
+            $('#uploadImageBtn')
+                .prop('disabled', isLoading)
+                .html(isLoading ?
+                    '<span class="spinner-border spinner-border-sm me-1"></span> Uploading...' :
+                    '<i class="ri-edit-2-line"></i> Update Profile Picture');
+        }
 
-            $('#profile_picture_input').on('change', function() {
+        $('#uploadImageBtn').on('click', function() {
+            $('#profile_picture_input').trigger('click');
+        });
 
-                let file = this.files[0];
-                if (!file) return;
+        $('#profile_picture_input').on('change', function() {
 
-                let formData = new FormData();
-                formData.append('avatar', file);
-                formData.append('_token', '{{ csrf_token() }}');
+            let file = this.files[0];
+            if (!file) return;
 
-                $.ajax({
-                    url: "{{ route('admin.profile.update.profile.picture') }}",
-                    type: "POST",
-                    data: formData,
-                    processData: false,
-                    contentType: false,
+            let formData = new FormData();
+            formData.append('avatar', file);
+            formData.append('_token', '{{ csrf_token() }}');
 
-                    beforeSend: function() {
-                        $('#uploadImageBtn').text('Uploading...');
-                    },
+            $.ajax({
+                url: "{{ route('admin.profile.update.profile.picture') }}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
 
-                    success: function(res) {
+                beforeSend: function() {
+                    setUploadButtonLoading(true);
+                },
 
-                        $('#uploadImageBtn').text('Update Profile Picture');
+                success: function(res) {
 
-                        if (res.success) {
+                    setUploadButtonLoading(false);
 
-                            $('.profile-img-main img').attr(
-                                'src',
-                                res.image_url + '?t=' + new Date().getTime()
-                            );
+                    if (res.success) {
 
-                            showToast('success', res.message);
+                        $('.profile-img-main img').attr(
+                            'src',
+                            res.image_url + '?t=' + new Date().getTime()
+                        );
 
-                        } else {
-                            showToast('error', res.message);
-                        }
-                    },
+                        showToast('success', res.message);
 
-                    error: function() {
-                        $('#uploadImageBtn').text('Update Profile Picture');
-                        showToast('error', 'Upload failed');
+                    } else {
+                        showToast('error', res.message || 'Profile picture was not updated.');
                     }
-                });
+                },
 
+                error: function(xhr) {
+                    setUploadButtonLoading(false);
+                    showToast('error', getErrorMessage(xhr, 'Profile picture was not updated.'));
+                },
+
+                complete: function() {
+                    $('#profile_picture_input').val('');
+                }
             });
 
         });
-    </script>
+
+    });
+</script>
 @endpush

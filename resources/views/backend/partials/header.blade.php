@@ -20,6 +20,36 @@
     <link href="{{ asset('Backend/assets/css/custom.min.css') }}" rel="stylesheet" />
 
     <style>
+        .swal2-show-custom {
+            animation: slideInRight 0.35s ease-out;
+        }
+
+        .swal2-hide-custom {
+            animation: fadeOut 0.2s ease-in;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
         .dropify-wrapper .dropify-preview .dropify-render img {
             width: 100%;
             height: auto;

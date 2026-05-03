@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Web\backend;
+namespace App\Http\Controllers\Web\Backend;
 
 use App\Helper\Helper;
 use App\Http\Controllers\Controller;
@@ -50,14 +50,15 @@ class CategoryController extends Controller
 
                 ->addColumn('status', function ($row) {
                     return '
-                <div class="form-check form-switch-success
-                <input class="form-check-input"
-                type="checkbox"
-                        onclick="changeStatus(' . $row->id . ')"
-                        ' . ($row->status ? 'checked' : '') . '>
-                </div>
-            ';
+        <div class="form-check form-switch form-switch-success">
+            <input class="form-check-input"
+                   type="checkbox"
+                   onclick="changeStatus(' . $row->id . ')"
+                   ' . ($row->status ? 'checked' : '') . '>
+        </div>
+    ';
                 })
+
 
                 ->addColumn('action', function ($row) {
                     return '
