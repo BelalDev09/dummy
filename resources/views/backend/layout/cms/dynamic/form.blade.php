@@ -1,176 +1,226 @@
 @extends('backend.app')
 
 @push('styles')
-    <style>
-        .dropify-wrapper .dropify-preview .dropify-render img {
-            max-height: 200px;
-            object-fit: contain;
-        }
-    </style>
+<style>
+    .dropify-wrapper .dropify-preview .dropify-render img {
+        max-height: 200px;
+        object-fit: contain;
+    }
+</style>
 @endpush
 
 @section('content')
-    <div class="container">
+<div class="container-xxl">
 
-        <form id="cmsForm"
-            action="{{ isset($cms) ? route('admin.dynamic.cms.update', $cms->id) : route('admin.dynamic.cms.store') }}"
-            method="POST" enctype="multipart/form-data">
+<form id="cmsForm"
+    action="{{ isset($cms) ? route('admin.dynamic.cms.update', $cms->id) : route('admin.dynamic.cms.store') }}"
+    method="POST"
+    enctype="multipart/form-data">
 
-            @csrf
-            @if (isset($cms))
-                @method('PUT')
-            @endif
+    @csrf
+    @if(isset($cms))
+        @method('PUT')
+    @endif
 
-            {{-- PAGE / SECTION --}}
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label>Page</label>
-                    <select name="page" class="form-control">
-                        <option value="home" {{ ($cms->page ?? '') == 'home' ? 'selected' : '' }}>Home</option>
-                        <option value="about" {{ ($cms->page ?? '') == 'about' ? 'selected' : '' }}>About</option>
-                        <option value="men" {{ ($cms->page ?? '') == 'men' ? 'selected' : '' }}>Men</option>
-                        <option value="women" {{ ($cms->page ?? '') == 'women' ? 'selected' : '' }}>Women</option>
-                    </select>
-                </div>
+    {{-- PAGE / SECTION --}}
+    <div class="row g-4 mb-4">
 
-                <div class="col-md-4 mb-3">
-                    <label>Section</label>
-                    <select name="section" class="form-control">
-                        <option value="hero" {{ ($cms->section ?? '') == 'hero' ? 'selected' : '' }}>Hero</option>
-                        <option value="about" {{ ($cms->section ?? '') == 'about' ? 'selected' : '' }}>About</option>
-                        <option value="services" {{ ($cms->section ?? '') == 'services' ? 'selected' : '' }}>Services
-                        </option>
-                        <option value="gallery" {{ ($cms->section ?? '') == 'gallery' ? 'selected' : '' }}>Gallery</option>
-                    </select>
-                </div>
+        <div class="col-md-4">
+            <label class="form-label">Page</label>
+            <select name="page" class="form-select">
+                <option value="home" {{ ($cms->page ?? '')=='home'?'selected':'' }}>Home</option>
+                <option value="about" {{ ($cms->page ?? '')=='about'?'selected':'' }}>About</option>
+                <option value="men" {{ ($cms->page ?? '')=='men'?'selected':'' }}>Men</option>
+                <option value="women" {{ ($cms->page ?? '')=='women'?'selected':'' }}>Women</option>
+            </select>
+        </div>
 
-                <div class="col-md-4 mb-3">
-                    <label>Status</label>
-                    <select name="status" class="form-control">
-                        <option value="active" {{ ($cms->status ?? '') == 'active' ? 'selected' : '' }}>Active</option>
-                        <option value="inactive" {{ ($cms->status ?? '') == 'inactive' ? 'selected' : '' }}>Inactive
-                        </option>
-                    </select>
-                </div>
-            </div>
+        <div class="col-md-4">
+            <label class="form-label">Section</label>
+            <select name="section" class="form-select">
+                <option value="hero" {{ ($cms->section ?? '')=='hero'?'selected':'' }}>Hero</option>
+                <option value="about" {{ ($cms->section ?? '')=='about'?'selected':'' }}>About</option>
+                <option value="services" {{ ($cms->section ?? '')=='services'?'selected':'' }}>Services</option>
+                <option value="gallery" {{ ($cms->section ?? '')=='gallery'?'selected':'' }}>Gallery</option>
+            </select>
+        </div>
 
-            {{-- BASIC CONTENT --}}
-            <div class="card p-3 mb-3">
-                <h5>Basic Content</h5>
-                <label for="form-label">Title</label>
-                <input type="text" name="title" class="form-control mb-2" placeholder="Title"
-                    value="{{ $cms->title ?? '' }}">
-                <label for="form-label">Sub Title</label>
-                <input type="text" name="sub_title" class="form-control mb-2" placeholder="Sub Title"
-                    value="{{ $cms->sub_title ?? '' }}">
-                <label for="form-label">Description</label>
-                <textarea name="description" class="form-control mb-2">{{ $cms->description ?? '' }}</textarea>
-                <label for="form-label">Image</label>
-                <input type="file" name="image" class="dropify mb-2"
-                    @if (!empty($cms->image)) data-default-file="{{ asset($cms->image) }}" @endif>
-                <label for="form-label">Button_text</label>
-                <input type="text" name="button_text" class="form-control mb-2" placeholder="Button Text"
-                    value="{{ $cms->button_text ?? '' }}">
-                <label for="form-label">Link_url</label>
-                <input type="url" name="link_url" class="form-control" placeholder="Button Link"
-                    value="{{ $cms->link_url ?? '' }}">
-            </div>
+        <div class="col-md-4">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="active" {{ ($cms->status ?? '')=='active'?'selected':'' }}>Active</option>
+                <option value="inactive" {{ ($cms->status ?? '')=='inactive'?'selected':'' }}>Inactive</option>
+            </select>
+        </div>
 
-            {{-- REPEATER --}}
-            <div class="card p-3">
-                <h5>Dynamic Items</h5>
-
-                <div id="v1-container"></div>
-
-                <button type="button" class="btn btn-primary mt-2" onclick="addV1()">
-                    + Add Item
-                </button>
-            </div>
-
-            <button class="btn btn-success mt-3">Save</button>
-        </form>
     </div>
+
+    {{-- BASIC --}}
+    <div class="card mb-4">
+        <div class="card-header"><h5>Basic Content</h5></div>
+        <div class="card-body">
+
+            <input type="text" name="title" class="form-control mb-3"
+                value="{{ $cms->title ?? '' }}" placeholder="Title">
+
+            <input type="text" name="sub_title" class="form-control mb-3"
+                value="{{ $cms->sub_title ?? '' }}" placeholder="Sub Title">
+
+            <textarea name="description" class="form-control mb-3" rows="4"
+                placeholder="Description">{{ $cms->description ?? '' }}</textarea>
+
+            <input type="file" name="image" class="form-control dropify"
+                @if(!empty($cms->image)) data-default-file="{{ asset($cms->image) }}" @endif>
+
+        </div>
+    </div>
+
+    {{-- TODO --}}
+    <div class="card mb-4" id="todo-section" style="display:none;">
+        <div class="card-header"><h5>Todo List</h5></div>
+        <div class="card-body" id="todo-container"></div>
+    </div>
+
+    <button type="button" id="add-todo-btn" class="btn btn-primary mb-3">
+        + Add Todo
+    </button>
+
+    <div class="text-end">
+        <button class="btn btn-success">Save</button>
+    </div>
+
+</form>
+
+</div>
 @endsection
+
+
 @push('scripts')
-    @php
-        $existingV1 = collect($cms->v1 ?? [])
-            ->map(function ($item) {
-                return array_merge($item, [
-                    'image' => !empty($item['image']) ? asset($item['image']) : null,
-                ]);
-            })
-            ->toArray();
-    @endphp
-    <script>
-        let existing = @json($existingV1);
+<script>
+    const APP_URL = "{{ asset('') }}";
+</script>
 
-        function initDropify(el) {
-            setTimeout(() => {
-                $(el).dropify();
-            }, 50);
-        }
+<script>
 
-        function addV1(data = {}) {
+let existingTodos = @json($cms->v1 ?? []);
 
-            let index = $('#v1-container .v1-item').length;
+existingTodos = Array.isArray(existingTodos) ? existingTodos : [];
 
-            let html = `
-    <div class="border p-3 mb-3 v1-item rounded">
+existingTodos = existingTodos.map(todo => ({
+    title: todo?.title ?? '',
+    sub_title: todo?.sub_title ?? '',
+    button_text: todo?.button_text ?? '',
+    link_url: todo?.link_url ?? '',
+    image: todo?.image ?? ''
+}));
+function renderTodos() {
 
-        <input type="text"
-            name="v1[${index}][title]"
-            class="form-control mb-2"
-            value="${data.title ?? ''}"
-            placeholder="Title">
+let container = $('#todo-container');
+container.html('');
 
-        <input type="text"
-            name="v1[${index}][sub_title]"
-            class="form-control mb-2"
-            value="${data.sub_title ?? ''}"
-            placeholder="Sub Title">
+if (!existingTodos.length) {
+    $('#todo-section').hide();
+    return;
+}
 
-        <input type="text"
-            name="v1[${index}][button_text]"
-            class="form-control mb-2"
-            value="${data.button_text ?? ''}"
-            placeholder="Button Text">
+$('#todo-section').show();
 
-        <input type="url"
-            name="v1[${index}][button_link]"
-            class="form-control mb-2"
-            value="${data.button_link ?? ''}"
-            placeholder="Button Link">
+existingTodos.forEach((todo, i) => {
 
-        <input type="file"
-            name="v1[${index}][image]"
-            class="dropify v1-image"
-            data-default-file="${data.image ?? ''}">
+    let html = `
+    <div class="card mb-3 todo-item">
+        <div class="card-body">
 
-        <button type="button"
-            class="btn btn-danger btn-sm mt-2 remove-item">
-            Remove
-        </button>
+            <div class="row g-3">
 
-    </div>
-    `;
+                <div class="col-md-6">
+                    <input type="text" name="v1[${i}][title]" class="form-control todo-title"
+                        value="${todo.title ?? ''}" placeholder="Title">
+                </div>
 
-            $('#v1-container').append(html);
+                <div class="col-md-6">
+                    <input type="text" name="v1[${i}][sub_title]" class="form-control todo-sub-title"
+                        value="${todo.sub_title ?? ''}" placeholder="Sub Title">
+                </div>
 
-            let last = $('#v1-container .v1-item').last();
+                <div class="col-md-6">
+                    <input type="text" name="v1[${i}][button_text]" class="form-control todo-button-text"
+                        value="${todo.button_text ?? ''}" placeholder="Button Text">
+                </div>
 
-            initDropify(last.find('.v1-image'));
-        }
+                <div class="col-md-6">
+                    <input type="url" name="v1[${i}][link_url]" class="form-control todo-link-url"
+                        value="${todo.link_url ?? ''}" placeholder="Link URL">
+                </div>
 
-        // LOAD
-        if (existing.length > 0) {
-            existing.forEach(item => addV1(item));
-        } else {
-            addV1();
-        }
+                <div class="col-md-8">
+                    <input type="file" name="v1[${i}][image]" class="form-control dropify"
+                        ${todo.image ? `data-default-file="${APP_URL}${todo.image}"` : ''}
 
-        // REMOVE FIX
-        $(document).on('click', '.remove-item', function() {
-            $(this).closest('.v1-item').remove();
-        });
-    </script>
+                </div>
+
+                <div class="col-md-4 text-end d-flex align-items-end">
+                    <button type="button" class="btn btn-danger remove-todo">
+                        Remove
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>`;
+
+    container.append(html);
+});
+
+$('.dropify').each(function () {
+    if (!$(this).data('dropify')) {
+        $(this).dropify();
+    }
+});
+}
+
+
+/* ADD */
+$(document).on('click','#add-todo-btn',function(){
+    existingTodos.push({
+        title:'',
+        sub_title:'',
+        button_text:'',
+        link_url:'',
+        image:''
+    });
+    renderTodos();
+});
+
+
+/* REMOVE */
+$(document).on('click','.remove-todo',function(){
+    let index = $(this).closest('.todo-item').data('index');
+    existingTodos.splice(index,1);
+    renderTodos();
+});
+
+
+/* INPUT SYNC */
+$(document).on('input','#todo-container input',function(){
+
+    let item = $(this).closest('.todo-item');
+    let index = item.data('index');
+
+    if(existingTodos[index]){
+        existingTodos[index].title = item.find('.todo-title').val();
+        existingTodos[index].sub_title = item.find('.todo-sub-title').val();
+        existingTodos[index].button_text = item.find('.todo-button-text').val();
+        existingTodos[index].link_url = item.find('.todo-link-url').val();
+    }
+});
+
+
+/* INIT */
+$(document).ready(function(){
+    renderTodos();
+});
+
+</script>
 @endpush

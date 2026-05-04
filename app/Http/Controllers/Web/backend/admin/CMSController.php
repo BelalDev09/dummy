@@ -109,7 +109,7 @@ class CMSController extends Controller
     public function edit($id)
     {
         $cms = CMS::findOrFail($id);
-        $cms->v1 = $cms->v1 ?? [];
+        // $cms->v1 = $cms->v1 ?? [];
 
         return view('backend.layout.cms.dynamic.form', compact('cms'));
     }
